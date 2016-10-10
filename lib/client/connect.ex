@@ -7,6 +7,22 @@ defmodule Discordbot.Connect do
   If it fails it will display a message.
   """
 
+  def start do
+    token_object = Discordbot.Connect.pass_token
+
+    socket = Discordbot.Connect.get_gateway
+              |> Socket.Web.connect!(secure: true)
+
+    socket
+      |> Socket.Web.send({:text, token_object})
+
+      Task.async fn ->
+        Discordbot.Scheduler.listen(socket)
+      end
+
+    {:ok, socket, token_object}
+  end
+
   def get_gateway do
     case HTTPoison.get(@discord_gateway) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
@@ -40,8 +56,9 @@ defmodule Discordbot.Connect do
           "$referrer"         => "",
           "$referring_domain" => ""
           },
-        "compress" => "false",
-        "large_threshold" => "250",
+        "compress" => false,
+        "large_threshold" => 250,
+        "shard" => [0, 1]
       }
     } |> Poison.encode!
   end
