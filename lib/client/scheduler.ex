@@ -1,8 +1,7 @@
 defmodule Discordbot.Scheduler do
-  import Discordbot.Events, only: [:events]
+  alias Discordbot.Events
   alias Discordbot.State
   alias Discordbot.Connect
-
 
   e = Events.event
 
@@ -15,11 +14,15 @@ defmodule Discordbot.Scheduler do
 
     IO.puts "LISTENING................................"
 
+    # socket
+    #   |> connected? #should pass socket back
+    #   |> Socket.Web.recv!
+
     {:text, data} = Socket.Web.recv!(socket)
 
     # Check for OP codes and handle
       case Poison.decode!(data) do
-         %{"t" => "READY", "d" => %{"session_id" => session_id}} ->
+         %{"t" => :ready, "d" => %{"session_id" => session_id}} ->
           Discordbot.Heartbeat.start(socket)
           listen(socket, state |> Map.merge(%{session_id: session_id}))
         %{"op" => 11} ->
@@ -31,6 +34,11 @@ defmodule Discordbot.Scheduler do
           IO.puts "UNHANDLED MSG TYPE"
           listen(socket, state)
       end
+  end
+
+  defp connected?(socket) do
+    msg_connected()
+    socket
   end
 
   defp msg_connected do
