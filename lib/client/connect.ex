@@ -7,6 +7,13 @@ defmodule Discordbot.Connect do
   If it fails it will display a message.
   """
 
+  def event do
+    %{
+      :ready    => "READY",
+      :resumed  => "RESUMED"
+    }
+  end
+
   def start do
     token_object = Discordbot.Connect.pass_token
 

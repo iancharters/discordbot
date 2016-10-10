@@ -1,0 +1,49 @@
+Payload exists inside of %{"d" => %{PAYLOAD}}
+Events exist inside of %{"t" => EVENT}
+
+Events to handle:
+! Connecting
+  - Who is connected in this channel when I join?
+  - Add this stuff to state!
+
++ Typing in channel
+  - Who typed
+  - What did they type
+  - Did they issue a command and how do we handle it?
+
++ Voice
+  - How do we handle this?
+  - Why do we handle this?
+
+
+
+COMPLETE EVENT LIST
+
+READY
+RESUMED
+CHANNEL_CREATE
+CHANNEL_UPDATE
+CHANNEL_DELETE
+GUILD_CREATE
+GUILD_UPDATE
+GUILD_DELETE
+GUILD_BAN_ADD
+GUILD_EMOJI_UPDATE
+GUILD_INTERROGATIONS_UPDATE
+GUILD_MEMBER_ADD
+GUILD_MEMBER_REMOVE
+GUILD_MEMBER_UPDATE
+GUILD_MEMBER_CHUNK
+GUILD_ROLE_CREATE
+GUILD_ROLE_UPDATE
+GUILD_ROLE_DELETE
+MESSAGE_CREATE
+MESSAGE_UPDATE
+MESSAGE_DELETE
+MESSAGE_DELETE_BULK
+PRESENCE_UPDATE
+TYPING_START
+USER_SETTINGS_UPDATE
+USER_UPDATE
+VOICE_STATE_UPDATE
+VOICE_SERVER_UPDATE
