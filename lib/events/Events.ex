@@ -26,7 +26,7 @@ defmodule Discordbot.Events do
       :presence_update              => "PRESENCE_UPDATE",
       :typing_start                 => "TYPING_START",
       :user_settings_update         => "USER_SETTINGS_UPDATE",
-      :user_ypdate                  => "USER_UPDATE",
+      :user_update                  => "USER_UPDATE",
       :voice_state_update           => "VOICE_STATE_UPDATE",
       :voice_server_update          => "VOICE_SERVER_UPDATE",
 
