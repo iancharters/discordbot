@@ -1,0 +1,72 @@
+Payload exists inside of %{"d" => %{PAYLOAD}}
+Events exist inside of %{"t" => EVENT}
+
+Questions for Discord staff
+1) Guilds are servers, right?
+2) 
+
+
+Events to handle:
+! Connecting
+  - Who is connected in this channel when I join?
+  - Add this stuff to state!
+
++ Typing in channel
+  - Who typed
+  - What did they type
+  - Did they issue a command and how do we handle it?
+
++ Voice
+  - How do we handle this?
+  - Why do we handle this?
+
+
+
+COMPLETE EVENT LIST
+
+READY
+RESUMED
+CHANNEL_CREATE
+CHANNEL_UPDATE
+CHANNEL_DELETE
+GUILD_CREATE
+GUILD_UPDATE
+GUILD_DELETE
+GUILD_BAN_ADD
+GUILD_EMOJI_UPDATE
+GUILD_INTERROGATIONS_UPDATE
+GUILD_MEMBER_ADD
+GUILD_MEMBER_REMOVE
+GUILD_MEMBER_UPDATE
+GUILD_MEMBER_CHUNK
+GUILD_ROLE_CREATE
+GUILD_ROLE_UPDATE
+GUILD_ROLE_DELETE
+MESSAGE_CREATE
+MESSAGE_UPDATE
+MESSAGE_DELETE
+MESSAGE_DELETE_BULK
+PRESENCE_UPDATE
+TYPING_START
+USER_SETTINGS_UPDATE
+USER_UPDATE
+VOICE_STATE_UPDATE
+VOICE_SERVER_UPDATE
+
+
+
+TYPING_START
+%{"d" => %{"channel_id" => "234167121834278912", "timestamp" => 1476116376,
+    "user_id" => "125329072892018690"}, "op" => 0, "s" => 3,
+  "t" => "TYPING_START"}
+
+MESSAGE_CREATE
+%{"d" => %{"attachments" => [],
+    "author" => %{"avatar" => "2ee07fd46ff5df4af07aff1e1050c112",
+      "discriminator" => "7695", "id" => "125329072892018690",
+      "username" => "hamburglar"}, "channel_id" => "234167121834278912",
+    "content" => "test", "edited_timestamp" => nil, "embeds" => [],
+    "id" => "235073865615671298", "mention_everyone" => false,
+    "mention_roles" => [], "mentions" => [], "nonce" => "235073863141031936",
+    "pinned" => false, "timestamp" => "2016-10-10T16:19:37.024000+00:00",
+    "tts" => false, "type" => 0}, "op" => 0, "s" => 4, "t" => "MESSAGE_CREATE"}

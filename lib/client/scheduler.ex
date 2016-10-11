@@ -1,59 +1,105 @@
-defmodule Discordbot.Op do
-  def opcodes do
-    %{
-      :dispatch               => 0,
-      :heartbeat              => 1,
-      :identify               => 2,
-      :status_update          => 3,
-      :voice_state_update     => 4,
-      :voice_server_ping      => 5,
-      :resume                 => 6,
-      :reconnect              => 7,
-      :request_guild_members  => 8,
-      :invalid_session        => 9
-    }
-  end
-end
-
 defmodule Discordbot.Scheduler do
+  alias Discordbot.Events
   alias Discordbot.State
+  alias Discordbot.Connect
+
+  e = Events.event
 
   # LISTENER
-  def listen(socket), do: listen(socket, %State{session_id: 0})
+  def listen(socket), do: listen(socket, %State{})
 
-  def listen(socket, state) do
+  defp listen(socket, state) do
 
-    if state.session_id == 0, do: msg_connected()
-    IO.puts "LISTENING................................"
-    # Start recevining
+    initial_connect?(socket, state)
+    IO.inspect state
+
     {:text, data} = Socket.Web.recv!(socket)
-    IO.puts "DATA RECEIVED."
+
     # Check for OP codes and handle
       case Poison.decode!(data) do
-        %{"op" => 0, "d" => %{"session_id" => session_id}} ->
-          IO.inspect({"SESSION: ", session_id})
-          # Start sending heartbeat to Discord server.
+         %{"t" => "READY",
+           "d" => %{"session_id" => session_id,
+                    "heartbeat_interval" => interval,
+                    "user" => %{
+                      "id" => user_id,
+                      "email" => email
+                      },
+                    }
+           } ->
+             IO.inspect Poison.decode!(data)
 
-          #Discordbot.Heartbeat.start(socket)
-          Discordbot.Heartbeat.start(socket)
-          # Call itself
-          listen(socket, state |> Map.merge(%{session_id: session_id}))
-          # Task.async(fn ->
-          #   listen(socket, %State{})
-          # end)
-        %{"op" => 11} ->
-          IO.inspect data
-          IO.puts "Nothing?"
+            Discordbot.Heartbeat.start(socket, interval)
+            listen(socket, state |> Map.merge(%{
+              bot: %{
+                session_id: session_id,
+                heartbeat_interval: interval,
+                user_id: user_id,
+                email: email
+              }
+            }))
+
+         %{"t" => "MESSAGE_CREATE",
+           "d" => %{
+                    "author" => %{
+                      "id"        => id,
+                      "username"  => username,
+                      },
+                      "content"   => content
+                    }
+           } ->
+            user_msg(username, content)
+            listen(socket, state)
+
+        %{"t" => "TYPING_START"} ->
           listen(socket, state)
+
+        %{"t" => "GUILD_CREATE",
+          "d" => %{
+                    "name" => server_name
+                  }
+          } ->
+            IO.puts "Joined guild: #{server_name}"
+            listen(socket, state)
+
+
+        %{"op" => 11} ->
+            IO.inspect Poison.decode!(data)
+            IO.puts "SERVER: HEARTBEAT ACK"
+            listen(socket, state)
+
+
         _ ->
-          IO.inspect data
-          IO.puts "please.."
+            msg_unhandled_case(data)
+            listen(socket, state)
       end
+  end
+
+  defp initial_connect?(socket, state) do
+    if state.bot.session_id == 0, do: msg_connected()
+    socket
   end
 
   defp msg_connected do
     IO.puts IO.ANSI.green <>
-            "CONNECTED."
+            "*****************\n" <>
+            "****CONNECTED****\n" <>
+            "*****************\n" <>
             IO.ANSI.reset
+  end
+
+  def msg_unhandled_case(data) do
+    IO.puts   IO.ANSI.red <>
+              "*******************************UNHANDLED MSG TYPE*******************************" <>
+              IO.ANSI.cyan
+
+    IO.inspect Poison.decode!(data)
+
+    IO.puts   IO.ANSI.red <>
+              "********************************************************************************" <>
+              IO.ANSI.reset
+  end
+
+  defp user_msg(name, msg) do
+    IO.puts IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
   end
 end

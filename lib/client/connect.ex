@@ -33,12 +33,14 @@ defmodule Discordbot.Connect do
       {:error, %HTTPoison.Error{reason: reason}} ->
         #Something is wrong with the discord API.
         IO.puts IO.ANSI.red <>
-                "FAILED TO RETRIEVE DISCORD API GATEWAY ADDRESS" <>
+                "******************************************************\n" <>
+                "****FAILED TO RETRIEVE DISCORD API GATEWAY ADDRESS****\n" <>
+                "******************************************************\n" <>
                 IO.ANSI.reset
     end
   end
 
-  """
+  @doc """
   Creates the JSON structure that makes up the initial idenitifier passed to
   Discord.  Bot token should be set as the environment variable `BOT_TOKEN`.
   """
