@@ -11,7 +11,6 @@ defmodule Discordbot.Scheduler do
   defp listen(socket, state) do
 
     initial_connect?(socket, state)
-    IO.inspect state
 
     {:text, data} = Socket.Web.recv!(socket)
 
@@ -28,8 +27,8 @@ defmodule Discordbot.Scheduler do
            } ->
              IO.inspect Poison.decode!(data)
 
-            Discordbot.Heartbeat.start(socket, interval)
-            listen(socket, state |> Map.merge(%{
+             Discordbot.Heartbeat.start(socket, interval)
+             listen(socket, state |> Map.merge(%{
               bot: %{
                 session_id: session_id,
                 heartbeat_interval: interval,
@@ -47,6 +46,7 @@ defmodule Discordbot.Scheduler do
                       "content"   => content
                     }
            } ->
+            IO.inspect data
             user_msg(username, content)
             listen(socket, state)
 
@@ -61,12 +61,8 @@ defmodule Discordbot.Scheduler do
             IO.puts "Joined guild: #{server_name}"
             listen(socket, state)
 
-
-        %{"op" => 11} ->
-            IO.inspect Poison.decode!(data)
-            IO.puts "SERVER: HEARTBEAT ACK"
-            listen(socket, state)
-
+        %{"t" => "PRESENCE_UPDATE"} ->
+          listen(socket, state)
 
         _ ->
             msg_unhandled_case(data)
