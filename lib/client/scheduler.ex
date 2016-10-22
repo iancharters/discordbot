@@ -1,6 +1,7 @@
 defmodule Discordbot.Scheduler do
   alias Discordbot.Events
   alias Discordbot.State
+  alias Discordbot.REST
   alias Discordbot.Connect
 
   e = Events.event
@@ -11,7 +12,6 @@ defmodule Discordbot.Scheduler do
   defp listen(socket, state) do
 
     initial_connect?(socket, state)
-    IO.inspect state
 
     {:text, data} = Socket.Web.recv!(socket)
 
@@ -26,10 +26,9 @@ defmodule Discordbot.Scheduler do
                       },
                     }
            } ->
-             IO.inspect Poison.decode!(data)
 
-            Discordbot.Heartbeat.start(socket, interval)
-            listen(socket, state |> Map.merge(%{
+             Discordbot.Heartbeat.start(socket, interval)
+             listen(socket, state |> Map.merge(%{
               bot: %{
                 session_id: session_id,
                 heartbeat_interval: interval,
@@ -41,13 +40,16 @@ defmodule Discordbot.Scheduler do
          %{"t" => "MESSAGE_CREATE",
            "d" => %{
                     "author" => %{
-                      "id"        => id,
-                      "username"  => username,
+                      "id"          => user_id,
+                      "username"    => username,
                       },
-                      "content"   => content
+                      "content"     => content,
+                      "channel_id"  => channel_id
                     }
            } ->
-            user_msg(username, content)
+            #TAKE INUT
+            IO.inspect data
+            user_msg(username, content, user_id, channel_id)
             listen(socket, state)
 
         %{"t" => "TYPING_START"} ->
@@ -61,12 +63,8 @@ defmodule Discordbot.Scheduler do
             IO.puts "Joined guild: #{server_name}"
             listen(socket, state)
 
-
-        %{"op" => 11} ->
-            IO.inspect Poison.decode!(data)
-            IO.puts "SERVER: HEARTBEAT ACK"
-            listen(socket, state)
-
+        %{"t" => "PRESENCE_UPDATE"} ->
+          listen(socket, state)
 
         _ ->
             msg_unhandled_case(data)
@@ -81,9 +79,7 @@ defmodule Discordbot.Scheduler do
 
   defp msg_connected do
     IO.puts IO.ANSI.green <>
-            "*****************\n" <>
             "****CONNECTED****\n" <>
-            "*****************\n" <>
             IO.ANSI.reset
   end
 
@@ -99,7 +95,30 @@ defmodule Discordbot.Scheduler do
               IO.ANSI.reset
   end
 
-  defp user_msg(name, msg) do
-    IO.puts IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
+  defp user_msg(name, msg, user_id, channel_id) do
+    case System.get_env("OWNER_ID") do
+      id ->
+        IO.puts IO.ANSI.red <> "[Owner] " <> IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
+        owner_command?(msg, user_id, channel_id)
+      _ ->
+        IO.puts IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
+        user_command?(msg, user_id, channel_id)
+    end
+  end
+
+  defp owner_command?(msg, user_id, channel_id) do
+    command = msg |> String.split |> List.first
+
+    case command do
+      "!echo" ->
+        REST.send_message(msg |> String.replace_leading(command <> " ", ""), channel_id)
+
+      _       ->
+      IO.puts msg
+    end
+  end
+
+  defp user_command?(msg, user_id, channel_id) do
+    #System.get_env("OWNER_ID")
   end
 end

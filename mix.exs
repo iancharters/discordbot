@@ -30,6 +30,7 @@ defmodule Discordbot.Mixfile do
   defp deps do
     [{:socket, "~> 0.3.5"},
      {:httpoison, "~> 0.9.0"},
-     {:poison, "~> 3.0"}]
+     {:poison, "~> 3.0"},
+     {:httpotion, "~> 3.0.2"}]
   end
 end
