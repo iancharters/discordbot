@@ -7,7 +7,7 @@ defmodule Discordbot.Scheduler do
   e = Events.event
 
   # LISTENER
-  def listen(socket), do: listen(socket, %State{})
+  def listen(socket), do: listen(socket, %State{socket: socket})
 
   defp listen(socket, state) do
 
@@ -26,7 +26,7 @@ defmodule Discordbot.Scheduler do
                       },
                     }
            } ->
-
+            IO.inspect data
              Discordbot.Heartbeat.start(socket, interval)
              listen(socket, state |> Map.merge(%{
               bot: %{
@@ -47,9 +47,9 @@ defmodule Discordbot.Scheduler do
                       "channel_id"  => channel_id
                     }
            } ->
-            #TAKE INUT
-            IO.inspect data
-            user_msg(username, content, user_id, channel_id)
+
+            IO.inspect data #TEMP
+            user_msg(username, content, user_id, channel_id, state)
             listen(socket, state)
 
         %{"t" => "TYPING_START"} ->
@@ -95,24 +95,28 @@ defmodule Discordbot.Scheduler do
               IO.ANSI.reset
   end
 
-  defp user_msg(name, msg, user_id, channel_id) do
+  defp user_msg(name, msg, user_id, channel_id, state) do
     case System.get_env("OWNER_ID") do
       id ->
         IO.puts IO.ANSI.red <> "[Owner] " <> IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
-        owner_command?(msg, user_id, channel_id)
+        owner_command?(msg, user_id, channel_id, state)
       _ ->
         IO.puts IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
         user_command?(msg, user_id, channel_id)
     end
   end
 
-  defp owner_command?(msg, user_id, channel_id) do
+  defp owner_command?(msg, user_id, channel_id, state) do
     command = msg |> String.split |> List.first
 
     case command do
-      "!echo" ->
+      "!echo"   ->
         REST.send_message(msg |> String.replace_leading(command <> " ", ""), channel_id)
-
+      "!info"   ->
+        REST.send_message("SESSION ID: #{state.bot.session_id}", channel_id)
+        REST.send_message("BOT USER ID: #{state.bot.user_id}", channel_id)
+      "!voice"  ->
+        Socket.Web.send(state.socket, {:text, voice_state_update(state)})
       _       ->
       IO.puts msg
     end
@@ -120,5 +124,18 @@ defmodule Discordbot.Scheduler do
 
   defp user_command?(msg, user_id, channel_id) do
     #System.get_env("OWNER_ID")
+  end
+
+  def voice_state_update(state) do
+    identity = %{
+      "op" => 4,
+      "d" => %{
+        "channel_id"  => "187436375396712448",
+        "user_id"     => state.bot.user_id,
+        "session_id"  => state.bot.session_id,
+        "self_deaf"   => false,
+        "self_mute"   => true,
+        }
+      } |> Poison.encode!
   end
 end
