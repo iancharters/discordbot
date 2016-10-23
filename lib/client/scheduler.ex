@@ -14,9 +14,10 @@ defmodule Discordbot.Scheduler do
     initial_connect?(socket, state)
 
     {:text, data} = Socket.Web.recv!(socket)
+    payload = Poison.decode!(data)
 
     # Check for OP codes and handle
-      case Poison.decode!(data) do
+      case payload do
          %{"t" => "READY",
            "d" => %{"session_id" => session_id,
                     "heartbeat_interval" => interval,
@@ -100,6 +101,9 @@ defmodule Discordbot.Scheduler do
       id ->
         IO.puts IO.ANSI.red <> "[Owner] " <> IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
         owner_command?(msg, user_id, channel_id, state)
+      151948529995087872 ->
+        IO.puts IO.ANSI.red <> "[Owner] " <> IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
+        owner_command?(msg, user_id, channel_id, state)
       _ ->
         IO.puts IO.ANSI.yellow <> "#{name}: " <> IO.ANSI.reset <> msg
         user_command?(msg, user_id, channel_id)
@@ -117,6 +121,8 @@ defmodule Discordbot.Scheduler do
         REST.send_message("BOT USER ID: #{state.bot.user_id}", channel_id)
       "!voice"  ->
         Socket.Web.send(state.socket, {:text, voice_state_update(state)})
+      "!sandstorm" ->
+        REST.send_message("dooo do doo doo do doo dooo dooo doo doo do doo dooo dood odod odooo", channel_id)
       _       ->
       IO.puts msg
     end
@@ -128,8 +134,8 @@ defmodule Discordbot.Scheduler do
 
   def voice_state_update(state) do
     identity = %{
-      "op" => 4,
-      "d" => %{
+      "op"  => 4,
+      "d"   => %{
         "channel_id"  => "187436375396712448",
         "user_id"     => state.bot.user_id,
         "session_id"  => state.bot.session_id,
