@@ -1,6 +1,5 @@
 defmodule Discordbot.Connect do
-  @discord_gateway "https://discordapp.com/api/gateway?encoding=json&v=5"
-
+  @discord_gateway "https://discordapp.com/api/gateway"
   """
   Queries the discord gateway for the websocket gateway address.  Discord
   recommends doing this, I assume to check if the api gateway has changed.
@@ -11,7 +10,8 @@ defmodule Discordbot.Connect do
     token_object = Discordbot.Connect.pass_token
 
     socket = Discordbot.Connect.get_gateway
-              |> Socket.Web.connect!(secure: true)
+              |> Socket.Web.connect!([secure: true,
+                                      path:   "/v=6&encoding=json"])
 
     socket
       |> Socket.Web.send({:text, token_object})
@@ -49,7 +49,7 @@ defmodule Discordbot.Connect do
     identity = %{
       "op" => 2,
       "d" => %{
-        "v" => 5,
+        "v" => "6",
         "token" => System.get_env("BOT_TOKEN"),
         "properties" => %{
           "$os"               => "OSX",
