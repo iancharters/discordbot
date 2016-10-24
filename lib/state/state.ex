@@ -7,5 +7,6 @@ defmodule Discordbot.State do
         email: "",
     },
     gateway: "",
-    socket: nil
+    socket: nil,
+    agent: nil
 end

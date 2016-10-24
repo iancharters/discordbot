@@ -7,7 +7,10 @@ defmodule Discordbot.Scheduler do
   e = Events.event
 
   # LISTENER
-  def listen(socket), do: listen(socket, %State{socket: socket})
+  def listen(socket) do
+    agent = Discordbot.State.Agent.start_link
+    listen(socket, %State{socket: socket, agent: agent})
+  end
 
   defp listen(socket, state) do
 
@@ -16,8 +19,10 @@ defmodule Discordbot.Scheduler do
     {:text, data} = Socket.Web.recv!(socket)
     payload = Poison.decode!(data)
 
-    {_, sequence} = Map.fetch(payload, "s")
+    sequence = Map.fetch!(payload, "s")
     state = Map.merge(state, %{sequence: sequence})
+
+    Discordbot.State.Agent.set(state)
 
     # Check for OP codes and handle
       case payload do
@@ -53,8 +58,6 @@ defmodule Discordbot.Scheduler do
                       "channel_id"  => channel_id
                     }
            } ->
-
-            IO.inspect data #TEMP
             user_msg(username, content, user_id, channel_id, state)
             listen(socket, state)
 
