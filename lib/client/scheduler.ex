@@ -7,7 +7,10 @@ defmodule Discordbot.Scheduler do
   e = Events.event
 
   # LISTENER
-  def listen(socket), do: listen(socket, %State{socket: socket})
+  def listen(socket) do
+    agent = Discordbot.State.Agent.start_link
+    listen(socket, %State{socket: socket, agent: agent})
+  end
 
   defp listen(socket, state) do
 
@@ -16,9 +19,14 @@ defmodule Discordbot.Scheduler do
     {:text, data} = Socket.Web.recv!(socket)
     payload = Poison.decode!(data)
 
+    sequence = Map.fetch!(payload, "s")
+    state = Map.merge(state, %{sequence: sequence})
+
+    Discordbot.State.Agent.set(state)
+
     # Check for OP codes and handle
       case payload do
-         %{"t" => "READY",
+         %{"t" => "READY", "s" => s,
            "d" => %{"session_id" => session_id,
                     "heartbeat_interval" => interval,
                     "user" => %{
@@ -27,8 +35,10 @@ defmodule Discordbot.Scheduler do
                       },
                     }
            } ->
-            IO.inspect data
+
+
              Discordbot.Heartbeat.start(socket, interval)
+
              listen(socket, state |> Map.merge(%{
               bot: %{
                 session_id: session_id,
@@ -48,8 +58,6 @@ defmodule Discordbot.Scheduler do
                       "channel_id"  => channel_id
                     }
            } ->
-
-            IO.inspect data #TEMP
             user_msg(username, content, user_id, channel_id, state)
             listen(socket, state)
 
@@ -114,22 +122,28 @@ defmodule Discordbot.Scheduler do
     command = msg |> String.split |> List.first
 
     case command do
-      "!echo"   ->
+      "!echo"       ->
         REST.send_message(msg |> String.replace_leading(command <> " ", ""), channel_id)
-      "!info"   ->
+      "!info"       ->
         REST.send_message("SESSION ID: #{state.bot.session_id}", channel_id)
         REST.send_message("BOT USER ID: #{state.bot.user_id}", channel_id)
-      "!voice"  ->
+      "!voice"      ->
         Socket.Web.send(state.socket, {:text, voice_state_update(state)})
-      "!sandstorm" ->
+      "!sandstorm"  ->
         REST.send_message("dooo do doo doo do doo dooo dooo doo doo do doo dooo dood odod odooo", channel_id)
+      "!sequence"      ->
+        REST.send_message(state.sequence, channel_id)
       _       ->
       IO.puts msg
     end
   end
 
   defp user_command?(msg, user_id, channel_id) do
-    #System.get_env("OWNER_ID")
+    command = msg |> String.split |> List.first
+  case command do
+    "!sandstorm" ->
+      REST.send_message("dooo do doo doo do doo dooo dooo doo doo do doo dooo dood odod odooo", channel_id)
+    end
   end
 
   def voice_state_update(state) do
